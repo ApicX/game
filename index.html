@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ApicX Game Hub</title>
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#0f0f0f;
+color:white;
+text-align:center
+}
+header{
+padding:20px;
+background:#1b1b1b
+}
+.container{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+gap:20px;
+padding:20px
+}
+.card{
+background:#222;
+padding:20px;
+border-radius:15px
+}
+button{
+padding:10px 20px;
+border:none;
+border-radius:10px;
+background:#00aaff;
+color:white;
+font-size:16px
+}
+input{
+padding:10px;
+border-radius:8px;
+border:none
+}
+</style>
+</head>
+<body>
+
+<header>
+<h1>🎮 ApicX Mini Games</h1>
+<p>Playable browser games</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h2>Tap Speed Game</h2>
+<p>Tap quickly in 5 seconds.</p>
+<h3 id="score">Score: 0</h3>
+<button onclick="startGame()">Start</button>
+<button onclick="tapGame()">TAP</button>
+</div>
+
+<div class="card">
+<h2>Guess Number</h2>
+<p>Guess a number between 1 and 10</p>
+<input id="guess" type="number" min="1" max="10">
+<button onclick="guessNumber()">Guess</button>
+<p id="result"></p>
+</div>
+
+</div>
+
+<script>
+let score = 0;
+let playing = false;
+
+function startGame(){
+score = 0;
+playing = true;
+document.getElementById('score').innerText='Score: 0';
+
+setTimeout(()=>{
+playing = false;
+alert('Game Over! Score: ' + score);
+},5000);
+}
+
+function tapGame(){
+if(playing){
+score++;
+document.getElementById('score').innerText='Score: ' + score;
+}
+}
+
+const random = Math.floor(Math.random()*10)+1;
+
+function guessNumber(){
+const guess = Number(document.getElementById('guess').value);
+const result = document.getElementById('result');
+
+if(guess === random){
+result.innerText='Correct! 🎉';
+}else if(guess < random){
+result.innerText='Too low!';
+}else{
+result.innerText='Too high!';
+}
+}
+</script>
+
+</body>
+</html>
