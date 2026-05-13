@@ -3,108 +3,587 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ApicX Game Hub</title>
+<title>Flappy Birds Ultimate</title>
+
 <style>
-body{
+
+*{
 margin:0;
-font-family:Arial;
-background:#0f0f0f;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+overflow:hidden;
+font-family:Arial,sans-serif;
+background:#70d6ff;
+}
+
+canvas{
+display:block;
+}
+
+/* ================= MENU ================= */
+
+#menu{
+position:absolute;
+inset:0;
+background:rgba(0,0,0,0.7);
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
 color:white;
-text-align:center
+z-index:20;
 }
-header{
-padding:20px;
-background:#1b1b1b
+
+#menu h1{
+font-size:55px;
+margin-bottom:20px;
 }
-.container{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-gap:20px;
-padding:20px
+
+#menu h2{
+margin-top:10px;
 }
-.card{
-background:#222;
-padding:20px;
-border-radius:15px
+
+.birds{
+display:flex;
+gap:15px;
+margin:15px;
+flex-wrap:wrap;
+justify-content:center;
 }
+
+.bird{
+width:70px;
+height:70px;
+border-radius:50%;
+border:4px solid white;
+cursor:pointer;
+transition:0.2s;
+}
+
+.bird:hover{
+transform:scale(1.1);
+}
+
 button{
-padding:10px 20px;
+padding:15px 25px;
+margin:10px;
+font-size:18px;
 border:none;
-border-radius:10px;
-background:#00aaff;
+border-radius:12px;
+cursor:pointer;
+background:orange;
 color:white;
-font-size:16px
+font-weight:bold;
 }
-input{
-padding:10px;
-border-radius:8px;
-border:none
+
+/* ================= SHOP ================= */
+
+#shop{
+position:absolute;
+inset:0;
+background:rgba(0,0,0,0.85);
+display:none;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+color:white;
+z-index:30;
 }
+
+.shop-item{
+margin:15px;
+padding:15px;
+background:#222;
+border-radius:15px;
+width:250px;
+text-align:center;
+}
+
+/* ================= GAME OVER ================= */
+
+#gameOver{
+position:absolute;
+inset:0;
+display:none;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+background:rgba(0,0,0,0.8);
+color:white;
+z-index:25;
+}
+
+#scoreText{
+margin:20px;
+font-size:30px;
+}
+
 </style>
 </head>
+
 <body>
 
-<header>
-<h1>🎮 ApicX Mini Games</h1>
-<p>Playable browser games</p>
-</header>
+<!-- MENU -->
 
-<div class="container">
+<div id="menu">
 
-<div class="card">
-<h2>Tap Speed Game</h2>
-<p>Tap quickly in 5 seconds.</p>
-<h3 id="score">Score: 0</h3>
-<button onclick="startGame()">Start</button>
-<button onclick="tapGame()">TAP</button>
-</div>
+<h1>🐤 Flappy Birds Ultimate</h1>
 
-<div class="card">
-<h2>Guess Number</h2>
-<p>Guess a number between 1 and 10</p>
-<input id="guess" type="number" min="1" max="10">
-<button onclick="guessNumber()">Guess</button>
-<p id="result"></p>
-</div>
+<h2>Select Bird</h2>
+
+<div class="birds">
+
+<div class="bird" data-color="yellow" style="background:yellow"></div>
+
+<div class="bird" data-color="red" style="background:red"></div>
+
+<div class="bird" data-color="cyan" style="background:cyan"></div>
+
+<div class="bird" data-color="lime" style="background:lime"></div>
+
+<div class="bird" data-color="pink" style="background:pink"></div>
 
 </div>
+
+<button id="startBtn">START GAME</button>
+
+<button id="shopBtn">BIRD SHOP</button>
+
+</div>
+
+<!-- SHOP -->
+
+<div id="shop">
+
+<h1>🛒 Bird Shop</h1>
+
+<div class="shop-item">
+<h2>Golden Bird</h2>
+<p>Cost: 20 Coins</p>
+<button onclick="buyGoldenBird()">BUY</button>
+</div>
+
+<button onclick="closeShop()">CLOSE</button>
+
+</div>
+
+<!-- GAME OVER -->
+
+<div id="gameOver">
+
+<h1>💀 GAME OVER</h1>
+
+<div id="scoreText">Score: 0</div>
+
+<div id="coinText">Coins: 0</div>
+
+<button onclick="restartGame()">PLAY AGAIN</button>
+
+</div>
+
+<canvas id="game"></canvas>
+
+<!-- AUDIO -->
+
+<audio id="jumpSound">
+<source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3">
+</audio>
+
+<audio id="coinSound">
+<source src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3">
+</audio>
 
 <script>
+
+/* ================= CANVAS ================= */
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+/* ================= STORAGE ================= */
+
+let highScore = localStorage.getItem("highScore") || 0;
+let totalCoins = localStorage.getItem("coins") || 0;
+let goldenUnlocked = localStorage.getItem("goldenBird") || false;
+
+/* ================= PLAYER ================= */
+
+let selectedBird = "yellow";
+
+const player = {
+x:120,
+y:300,
+radius:22,
+velocity:0,
+gravity:0.5,
+jump:-8
+};
+
+/* ================= SELECT BIRD ================= */
+
+document.querySelectorAll(".bird").forEach(bird=>{
+
+bird.addEventListener("click",()=>{
+
+selectedBird = bird.dataset.color;
+
+});
+
+});
+
+/* ================= GAME ================= */
+
+let gameStarted = false;
 let score = 0;
-let playing = false;
 
-function startGame(){
-score = 0;
-playing = true;
-document.getElementById('score').innerText='Score: 0';
+let pipes = [];
+let coins = [];
 
-setTimeout(()=>{
-playing = false;
-alert('Game Over! Score: ' + score);
-},5000);
+/* ================= CREATE PIPES ================= */
+
+function createPipe(){
+
+let gap = 180;
+
+let top = Math.random() * (canvas.height - 350) + 50;
+
+pipes.push({
+x:canvas.width,
+width:80,
+top:top,
+gap:gap,
+passed:false
+});
+
+/* COIN */
+
+coins.push({
+x:canvas.width + 40,
+y:top + gap/2,
+radius:12,
+taken:false
+});
+
 }
 
-function tapGame(){
-if(playing){
-score++;
-document.getElementById('score').innerText='Score: ' + score;
+setInterval(()=>{
+
+if(gameStarted){
+createPipe();
 }
+
+},1800);
+
+/* ================= START ================= */
+
+document.getElementById("startBtn").onclick = ()=>{
+
+document.getElementById("menu").style.display = "none";
+
+gameStarted = true;
+
+gameLoop();
+
+};
+
+/* ================= SHOP ================= */
+
+document.getElementById("shopBtn").onclick = ()=>{
+
+document.getElementById("shop").style.display = "flex";
+
+};
+
+function closeShop(){
+
+document.getElementById("shop").style.display = "none";
+
 }
 
-const random = Math.floor(Math.random()*10)+1;
+function buyGoldenBird(){
 
-function guessNumber(){
-const guess = Number(document.getElementById('guess').value);
-const result = document.getElementById('result');
+if(totalCoins >= 20){
 
-if(guess === random){
-result.innerText='Correct! 🎉';
-}else if(guess < random){
-result.innerText='Too low!';
+totalCoins -= 20;
+
+goldenUnlocked = true;
+
+localStorage.setItem("goldenBird", true);
+
+localStorage.setItem("coins", totalCoins);
+
+alert("Golden Bird Unlocked ✨");
+
 }else{
-result.innerText='Too high!';
+
+alert("Not enough coins!");
+
 }
+
 }
+
+/* ================= CONTROLS ================= */
+
+window.addEventListener("click", flap);
+window.addEventListener("keydown", flap);
+
+function flap(){
+
+if(gameStarted){
+
+player.velocity = player.jump;
+
+document.getElementById("jumpSound").play();
+
+}
+
+}
+
+/* ================= DRAW BG ================= */
+
+function drawBackground(){
+
+let gradient = ctx.createLinearGradient(0,0,0,canvas.height);
+
+gradient.addColorStop(0,"#70d6ff");
+gradient.addColorStop(1,"#ffffff");
+
+ctx.fillStyle = gradient;
+
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+}
+
+/* ================= DRAW BIRD ================= */
+
+function drawBird(){
+
+ctx.fillStyle = selectedBird;
+
+ctx.beginPath();
+ctx.arc(player.x,player.y,player.radius,0,Math.PI*2);
+ctx.fill();
+
+/* eye */
+
+ctx.fillStyle = "black";
+
+ctx.beginPath();
+ctx.arc(player.x+7,player.y-5,4,0,Math.PI*2);
+ctx.fill();
+
+/* wing animation */
+
+ctx.fillStyle = "white";
+
+ctx.beginPath();
+ctx.arc(player.x-5,player.y+5,8+Math.sin(Date.now()/100)*2,0,Math.PI*2);
+ctx.fill();
+
+}
+
+/* ================= DRAW PIPES ================= */
+
+function drawPipes(){
+
+ctx.fillStyle = "green";
+
+pipes.forEach(pipe=>{
+
+ctx.fillRect(pipe.x,0,pipe.width,pipe.top);
+
+ctx.fillRect(
+pipe.x,
+pipe.top + pipe.gap,
+pipe.width,
+canvas.height
+);
+
+pipe.x -= 3;
+
+/* SCORE */
+
+if(!pipe.passed && pipe.x + pipe.width < player.x){
+
+pipe.passed = true;
+
+score++;
+
+}
+
+/* COLLISION */
+
+if(
+player.x + player.radius > pipe.x &&
+player.x - player.radius < pipe.x + pipe.width &&
+(
+player.y - player.radius < pipe.top ||
+player.y + player.radius > pipe.top + pipe.gap
+)
+){
+
+endGame();
+
+}
+
+});
+
+}
+
+/* ================= COINS ================= */
+
+function drawCoins(){
+
+ctx.fillStyle = "gold";
+
+coins.forEach(coin=>{
+
+coin.x -= 3;
+
+if(!coin.taken){
+
+ctx.beginPath();
+ctx.arc(coin.x,coin.y,coin.radius,0,Math.PI*2);
+ctx.fill();
+
+}
+
+/* collect */
+
+let dx = player.x - coin.x;
+let dy = player.y - coin.y;
+
+let dist = Math.sqrt(dx*dx + dy*dy);
+
+if(dist < player.radius + coin.radius && !coin.taken){
+
+coin.taken = true;
+
+totalCoins++;
+
+localStorage.setItem("coins", totalCoins);
+
+document.getElementById("coinSound").play();
+
+}
+
+});
+
+}
+
+/* ================= UPDATE ================= */
+
+function update(){
+
+player.velocity += player.gravity;
+
+player.y += player.velocity;
+
+/* FLOOR */
+
+if(player.y + player.radius > canvas.height){
+
+endGame();
+
+}
+
+/* SKY */
+
+if(player.y - player.radius < 0){
+
+player.y = 0;
+
+}
+
+}
+
+/* ================= SCORE ================= */
+
+function drawText(){
+
+ctx.fillStyle = "black";
+
+ctx.font = "40px Arial";
+
+ctx.fillText("Score: " + score,20,50);
+
+ctx.fillText("Coins: " + totalCoins,20,100);
+
+ctx.fillText("High Score: " + highScore,20,150);
+
+}
+
+/* ================= GAME OVER ================= */
+
+function endGame(){
+
+gameStarted = false;
+
+if(score > highScore){
+
+highScore = score;
+
+localStorage.setItem("highScore", highScore);
+
+}
+
+document.getElementById("scoreText").innerText =
+"Score: " + score;
+
+document.getElementById("coinText").innerText =
+"Coins: " + totalCoins;
+
+document.getElementById("gameOver").style.display = "flex";
+
+}
+
+/* ================= RESTART ================= */
+
+function restartGame(){
+
+location.reload();
+
+}
+
+/* ================= LOOP ================= */
+
+function gameLoop(){
+
+if(!gameStarted) return;
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+drawBackground();
+
+update();
+
+drawBird();
+
+drawPipes();
+
+drawCoins();
+
+drawText();
+
+requestAnimationFrame(gameLoop);
+
+}
+
+/* ================= RESIZE ================= */
+
+window.addEventListener("resize",()=>{
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+});
+
 </script>
 
 </body>
