@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Flappy Bird Ultimate</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<!-- ================= MENU ================= -->
+
+<div id="menu">
+
+<h1>🐤 Flappy Bird Ultimate</h1>
+
+<h2>Select Bird</h2>
+
+<div class="birds">
+
+<div class="birdCard"
+onclick="selectBird('assets/bird1.png')">
+
+<img src="assets/bird1.png">
+
+</div>
+
+<div class="birdCard"
+onclick="selectBird('assets/bird2.png')">
+
+<img src="assets/bird2.png">
+
+</div>
+
+<div class="birdCard"
+onclick="selectBird('assets/bird3.png')">
+
+<img src="assets/bird3.png">
+
+</div>
+
+</div>
+
+<button id="startBtn">
+START GAME
+</button>
+
+<button onclick="openShop()">
+SHOP
+</button>
+
+</div>
+
+<!-- ================= SHOP PANEL ================= -->
+
+<div id="shopPanel">
+
+<h1>🛒 Shop</h1>
+
+<div class="shopItem">
+
+<img src="assets/goldbird.png">
+
+<h2>Golden Bird</h2>
+
+<p>Cost: 20 Coins</p>
+
+<button onclick="buyGoldenBird()">
+BUY
+</button>
+
+</div>
+
+<button onclick="closeShop()">
+CLOSE
+</button>
+
+</div>
+
+<!-- ================= GAME OVER ================= -->
+
+<div id="gameOver">
+
+<h1>💀 GAME OVER</h1>
+
+<div id="scoreText">
+Score: 0
+</div>
+
+<button onclick="restartGame()">
+PLAY AGAIN
+</button>
+
+</div>
+
+<!-- ================= CANVAS ================= -->
+
+<canvas id="game"></canvas>
+
+<script src="script.js"></script>
+
+</body>
+</html>
